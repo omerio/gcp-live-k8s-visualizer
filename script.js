@@ -231,10 +231,12 @@ var renderNodes = function() {
 	var y = 25;
 	var x = 100;
   $.each(nodes.items, function(index, value) {
+		// console.log(JSON.stringify(value, null, 2));
     //console.log(value);
 		var div = $('<div/>');
     var ready = 'not_ready';
     $.each(value.status.conditions, function(index, condition) {
+			// console.log(index + ', condition = ' + JSON.stringify(condition));
       if (condition.type === 'Ready') {
         ready = (condition.status === 'True' ? 'ready' : 'not_ready' )
       }
@@ -274,9 +276,20 @@ var renderGroups = function() {
       //console.log(value);
       var phase = value.status.phase ? value.status.phase.toLowerCase() : '';
 			if (value.type == "pod") {
-        if ('deletionTimestamp' in value.metadata) {
+				// console.log(JSON.stringify(value, null, 2));
+				var readyStatus = true;
+				var containerStatus = {};
+				if(value.status.containerStatuses && value.status.containerStatuses.length > 0) {
+					containerStatus = value.status.containerStatuses[0];
+					readyStatus = containerStatus.ready;
+				}
+				console.log('Pod name: ' + value.metadata.name + ', ' + 
+					'Ready: ' + containerStatus.ready + ', ' + 
+					'Restart count: ' + containerStatus.restartCount);
+        if ('deletionTimestamp' in value.metadata || !readyStatus) {
           phase = 'terminating';
-        }
+				}
+				
 				eltDiv = $('<div class="window pod ' + phase + '" title="' + value.metadata.name + '" id="pod-' + value.metadata.name +
 					'" style="left: ' + (x + 250) + '; top: ' + (y + 160) + '"/>');
 				eltDiv.html('<span>' + 
